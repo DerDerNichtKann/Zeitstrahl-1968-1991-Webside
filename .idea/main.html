@@ -1,10 +1,790 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Zeitstrahl 1968 - 1991</title>
+    <title>Timeline: Ereignisse &amp; Staatsführer 1968–1991</title>
+    <style>
+        /* ---------- Reset & Grundlayout ---------- */
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            color: #f0f0f0;
+            font-family: 'Quantico', sans-serif;
+            overflow-x: hidden;
+        }
+        header {
+            background: #0a0a0a;
+            border-bottom: 2px solid #222;
+            padding: 10px 20px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        header h1 {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 3px;
+            font-size: 2rem;
+            color: #00ffc3;
+            letter-spacing: 1px;
+        }
+        /* Präsentationsbutton oben rechts */
+        #presentationBtn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: transparent;
+            color: #00ffc3;
+            border: 1px solid #00ffc3;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        #presentationBtn:hover {
+            background: #00ffc3;
+            color: #0a0a0a;
+        }
+
+        /* ---------- Timeline-Container & Linie ---------- */
+
+        .year-label {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 400;
+        }
+
+        /* ---------- Timeline-Jahresanzeige mit Zoom-Anpassung ---------- */
+        .timeline-wrapper {
+            position: relative;
+            transform-origin: left center;
+            transition: transform 0.3s ease;
+        }
+
+        .timeline-container::-webkit-scrollbar {
+            display: none;
+        }
+        .timeline-container {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            cursor: grab;
+        }
+        .timeline-container:active {
+            cursor: grabbing;
+        }
+
+        /* Verbessertes Modal-Design */
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 0 40px rgba(0,255,195,0.2);
+        }
+
+        .modal-content h2 {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+        }
+
+        #modalDate {
+            color: #00ffc3;
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 20px;
+        }
+
+        #modalText {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #00ffc3;
+        }
+
+        /* Neue Präsentations-Buttons */
+        .presentation-controls {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 25px;
+        }
+
+        .presentation-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0,255,195,0.1);
+            border: 2px solid #00ffc3;
+            color: #00ffc3;
+            font-size: 1.8rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #endBtn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,0,0,0.2);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .presentation-btn:hover {
+            background: #00ffc3;
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        /* Verbesserter Präsentationsbutton */
+        #presentationBtn {
+            background: linear-gradient(45deg, #00ffc3, #0099ff);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+        }
+
+        #presentationBtn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0,255,195,0.5);
+        }
+
+
+        .timeline-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 70px); /* Platz für Header */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: scroll;
+            scroll-behavior: smooth;
+            overflow-y: hidden;
+            padding: 20px 0;
+        }
+        /* Feste Breite der Timeline, damit horizontal gescrollt werden kann */
+        .timeline {
+            position: relative;
+            width: 1500px;
+            height: 4px;
+            background: #00ffc3;
+            border-radius: 2px;
+            margin: 0 auto;
+            transition: transform 0.3s ease;
+            display: flex; /* Für Jahr-Marker */
+            align-items: flex-start; /* Für Jahr-Marker */
+        }
+
+        /* ---------- Marker für Ereignisse ---------- */
+        .event-marker {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            background: #00ffc3;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        /* Kopf der Staatsführer-Ereignisse in anderer Farbe und etwas größer */
+        .event-marker[data-type="headOfState"] {
+            background: #ff9800;
+            width: 20px;
+            height: 20px;
+        }
+        /* Tooltip – bei Hover wird der Titel eingeblendet */
+        .event-marker:hover::after {
+            content: attr(data-title);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* ---------- Zoom-Buttons (vertikal zentriert rechts) ---------- */
+        .zoom-controls {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .zoom-btn {
+            width: 44px;
+            height: 44px;
+            background: #111;
+            border: 2px solid #444;
+            border-radius: 6px;
+            color: #00ffc3;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .zoom-btn:hover { background: #222; }
+
+        /* ---------- Jahr-Marker auf der Timeline ---------- */
+        .year-marker-line {
+             position: absolute;
+            top: -10px; /* Über der Hauptlinie */
+             width: 2px;
+             height: 14px; /* Länge der Markierungslinie */
+            background: #00ffc3;
+           }
+
+        .year-marker-label {
+            position: absolute;
+            top: 20px; /* Unter der Hauptlinie und Markierung */
+            transform: translateX(-50%); /* Zentriert die Jahreszahl */
+            color: #999;
+            font-size: 0.9rem;
+            font-family: 'Orbitron', sans-serif;
+            }
+
+
+        /* ---------- Modal für Ereignisdetails ---------- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #161616;
+            border: 2px solid #00ffc3;
+            border-radius: 6px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90%;
+            overflow-y: auto;
+            padding: 20px;
+            position: relative;
+        }
+        .modal-content h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #00ffc3;
+        }
+        .modal-content p {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+        .modal-content img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            color: #fff;
+            cursor: pointer;
+        }
+        /* ---------- Präsentationssteuerung ---------- */
+        .presentation-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .presentation-btn {
+            background: #111;
+            color: #00ffc3;
+            border: 1px solid #00ffc3;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        .presentation-btn:hover {
+            background: #00ffc3;
+            color: #0a0a0a;
+        }
+
+        /* Neuer Stil für Jahresanzeige */
+        .year-label {
+            position: absolute;
+            top: -50px;
+            transform: translateX(-50%) scale(calc(1 / var(--scale-factor, 1)));
+            transform-origin: bottom center;
+            color: #00ffc3;
+            font-size: 1.4rem;
+            opacity: 0.9;
+            text-shadow: 0 0 10px rgba(0, 255, 195, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* Verbesserte Modal-Darstellung */
+        .modal-content {
+            font-family: 'Quantico', sans-serif;
+            background: linear-gradient(152deg, #1a1a1a 0%, #2d2d2d 100%);
+            border: 1px solid #00ffc355;
+            box-shadow: 0 0 50px rgba(0, 255, 195, 0.1);
+        }
+
+        .modal-content h2 {
+            font-family: 'Orbitron', sans-serif;
+            border-bottom: 2px solid #00ffc3;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Jahr-Animation im Präsentationsmodus */
+        .year-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: #00ffc3;
+            text-shadow: 0 0 20px rgba(0, 255, 195, 0.5);
+            opacity: 0;
+            animation: fadeInOut 2s ease-in-out;
+            z-index: 2000;
+            pointer-events: none;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5) rotate(-5deg);
+                filter: blur(5px);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2) rotate(0deg);
+                filter: blur(0);
+            }
+            80% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+                filter: drop-shadow(0 0 20px #00ffc3);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5) rotate(5deg);
+                filter: blur(5px);
+            }
+        }
+
+        .grabbing {
+            cursor: grabbing !important;
+            user-select: none;
+        }
+
+        .presentation-active #endBtn {
+            display: block;
+        }
+
+        /* Verbesserte Präsentationskarten */
+        .modal-content.presentation {
+            width: 70%;
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .modal-content.presentation img {
+            max-height: 40vh;
+            margin: 20px 0;
+        }
+
+        #endBtn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff4444;
+            color: #ff4444;
+            display: none;
+        }
+
+        .presentation-active #endBtn {
+            display: block;
+        }
+
+    </style>
 </head>
 <body>
+<header>
+    <h1>Historische Ereignisse &amp; Staatsführer 1968–1991</h1>
+    <button id="presentationBtn">Präsentation</button>
+</header>
 
+<div class="timeline-container" id="timelineContainer">
+    <div class="timeline" id="timeline"></div>
+    <div class="zoom-controls">
+        <div class="zoom-btn" id="zoomIn">+</div>
+        <div class="zoom-btn" id="zoomOut">–</div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="eventModal">
+    <div class="modal-content">
+        <button class="close-modal" id="closeEventModal">&times;</button>
+        <h2 id="modalTitle"></h2>
+        <p id="modalDate"></p>
+        <img id="modalImg" src="" alt="Ereignisbild">
+        <p id="modalText"></p>
+        <div class="presentation-controls" id="presentationNav" style="display:none;">
+            <button class="presentation-btn" id="prevBtn">←</button>
+            <button class="presentation-btn" id="nextBtn">→</button>
+        </div>
+        <button class="presentation-btn" id="endBtn">×</button>
+    </div>
+</div>
+
+<script>
+    const eventsData = [
+
+        { date: "1968-01-01", title: "USA: Lyndon B. Johnson im Amt", text: "Lyndon B. Johnson führte die USA in einer Zeit großer sozialer Umwälzungen und des Vietnamkriegs. Seine Präsidentschaft war von der Bürgerrechtsbewegung und zunehmenden Antikriegsprotesten geprägt.", img: "https://vignette.wikia.nocookie.net/thepoliticalmachine/images/b/be/Lyndon_B._Johnson_portrait.jpg/revision/latest/scale-to-width-down/2000?cb=20200410043635", type: "headOfState" },
+        { date: "1968-01-02", title: "Sowjetunion: Leonid Breschnew", text: "Leonid Breschnew festigte seine Macht in der Sowjetunion und leitete eine Ära der Stagnation ein, die als 'Ära Breschnew' bekannt wurde. Geprägt von zunehmender Militarisierung und dem Wettrüsten mit den USA.", img: "https://cdni.rbth.com/rbthmedia/images/2020.06/original/5ef09c4f15e9f96e5c68b2c1.jpg", type: "headOfState" },
+        { date: "1968-01-03", title: "DDR: Walter Ulbricht", text: "Walter Ulbricht, der Generalsekretär des Zentralkomitees der SED, war der Architekt des Mauerbaus und prägte die DDR durch ideologische Starre und Repression.", img: "https://upload.wikimedia.org/wikipedia/commons/9/9b/Bundesarchiv_Bild_183-63573-0001%2C_Berlin%2C_VI._Parteitag_der_SED%2C_Walter_Ulbricht.jpg", type: "headOfState" },
+        { date: "1968-01-04", title: "Polen: Władysław Gomułka", text: "Władysław Gomułka stand an der Spitze Polens während des 'Polnischen Frühlings' 1968, der vonStudentenprotesten und politischerUnruhegekennzeichnet war. Seine Herrschaft war vonNationalismus undantisemitischer Propaganda überschattet.", img: "https://upload.wikimedia.org/wikipedia/commons/1/1f/Gomulka1964.jpg", type: "headOfState" },
+        { date: "1968-01-05", title: "Ungarn: János Kádár", text: "János Kádár führte Ungarn nach dem Volksaufstand von 1956. Sein 'Gulaschkommunismus' stand für eine vorsichtige wirtschaftliche Liberalisierung undrelative politischeStabilität imOstblock.", img: "https://upload.wikimedia.org/wikipedia/commons/7/77/Bundesarchiv_Bild_183-1989-1207-028%2C_Moskau%2C_Besuch_Ungarische_Regierungsdelegation.jpg", type: "headOfState" },
+
+        { date: "1968-07-01", title: "Kernwaffensperrvertrag", text: "Der Kernwaffensperrvertrag (NVV) wurde unterzeichnet, um die Weiterverbreitung vonAtomwaffen zu verhindern. EinMeilenstein der internationalenBemühungen umAbrüstung undFriedenssicherung imKalten Krieg.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Treaty_on_the_Non-Proliferation_of_Nuclear_Weapons.jpg/800px-Treaty_on_the_Non-Proliferation_of_Nuclear_Weapons.jpg", type: "historical" },
+
+        { date: "1969-01-01", title: "BRD: Willy Brandt", text: "Willy Brandt, Bundeskanzler der BRD, initiierte die 'Neue Ostpolitik', die aufEntspannung undAnnäherung an die DDR und die osteuropäischenStaatenzielte. Sein Kniefall in Warschau wurde zumSymbol derdeutschenVergangenheitsbewältigung.", img: "https://upload.wikimedia.org/wikipedia/commons/9/98/Willy_Brandt_1970-2.jpg", type: "headOfState" },
+        { date: "1969-01-20", title: "USA: Richard Nixon übernimmt", text: "Richard Nixon trat sein Amt als US-Präsident an. Seine Amtszeit war geprägt vom Vietnamkrieg, derWatergate-Affäre undseiner bahnbrechenden Chinapolitik.", img: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Richard_Nixon_official_photo_portrait.jpg", type: "headOfState" },
+        { date: "1970-07-01", title: "Polen: Edward Gierek übernimmt", text: "Edward Gierek löste Gomułka als Parteichef in Polen ab undversuchte durchModernisierung undKonsumorientierung dieWirtschaft anzukurbeln. Seine Politik führte jedoch zu wachsender Staatsverschuldung und sozialen Spannungen.", img: "https://upload.wikimedia.org/wikipedia/commons/c/c9/Edward_Gierek_1970s.jpg", type: "headOfState" },
+
+        { date: "1971-09-03", title: "Berlin-Abkommen", text: "Das Viermächte-Abkommen über Berlin wurde unterzeichnet, um denStatus West-Berlins zuregeln und denTransitverkehr zwischen Westdeutschland und Berlin zuerleichtern. Ein wichtiger Schritt zurEntspannung imgeteilten Deutschland.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Bundesarchiv_B_136_Bild-F0118-0011%2C_Berlin%2C_Vierm%C3%A4chte-Abkommen.jpg/800px-Bundesarchiv_B_136_Bild-F0118-0011%2C_Berlin%2C_Vierm%C3%A4chte-Abkommen.jpg", type: "historical" },
+        { date: "1972-05-26", title: "SALT-I-Vertrag", text: "Der SALT-I-Vertrag (Strategic Arms Limitation Talks) zwischen den USA und der UdSSR begrenzte erstmals strategischeAtomwaffen. EinSignal derEntspannung imWettrüsten derSupermächte.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Nixon_and_Brezhnev_signing_SALT_I.jpg/800px-Nixon_and_Brezhnev_signing_SALT_I.jpg", type: "historical" },
+
+        { date: "1974-05-16", title: "BRD: Helmut Schmidt übernimmt", text: "Helmut Schmidt wurde Bundeskanzler der BRD. Seine Amtszeit war geprägt von derÖlkrise,Terrorismus der RAF undNATO-Doppelbeschluss. Bekannt fürseineKrisenmanagementfähigkeiten.", img: "https://upload.wikimedia.org/wikipedia/commons/8/8d/Helmut_Schmidt_by_Klaus_D._Waltz_cropped.jpg", type: "headOfState" },
+        { date: "1974-08-09", title: "USA: Gerald Ford übernimmt", text: "Gerald Ford übernahm nach Nixons Rücktritt das Präsidentenamt. Er begnadigte Nixon undversuchte dasVertrauen in die US-Regierung wiederherzustellen.", img: "https://upload.wikimedia.org/wikipedia/commons/1/1c/Gerald_Ford_presidential_portrait.jpg", type: "headOfState" },
+
+        { date: "1975-08-01", title: "Schlussakte der KSZE", text: "Die Schlussakte von Helsinki der KSZE (Konferenz überSicherheit undZusammenarbeit in Europa) wurde unterzeichnet. Sieenthielt Prinzipien zurSicherheit,Zusammenarbeit undMenschenrechte und beeinflusste die spätere Entwicklung des Ost-West-Konflikts.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Bundesarchiv_Bild_183-P0801-310%2C_Konferenz_f%C3%BCr_Sicherheit_und_Zusammenarbeit_in_Europa_%28KSZE%29.jpg/800px-Bundesarchiv_Bild_183-P0801-310%2C_Konferenz_f%C3%BCr_Sicherheit_und_Zusammenarbeit_in_Europa_%28KSZE%29.jpg", type: "historical" },
+
+        { date: "1977-01-20", title: "USA: Jimmy Carter übernimmt", text: "Jimmy Carter wurde US-Präsident. Seine Amtszeit war vonwirtschaftlichenProblemen, derIranischen Revolution und derGeiselnahme in der US-Botschaft in Teheran geprägt. Er setzte sich fürMenschenrechte undFrieden imNahenOsten ein (Camp-David-Abkommen).", img: "https://upload.wikimedia.org/wikipedia/commons/4/49/Jimmy_Carter_1977_official_portrait.jpg", type: "headOfState" },
+
+        { date: "1979-12-12", title: "NATO-Doppelbeschluss", text: "Der NATO-Doppelbeschluss wurde gefasst, um auf die sowjetischeAufrüstung mitSS-20-Raketen zu reagieren. Er sah die Stationierung neuerAtomraketen in Westeuropa vor, bot aber gleichzeitigVerhandlungen überRüstungskontrolle an. Eskalation des Kalten Krieges.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Nato_double-track_decision.jpg/800px-Nato_double-track_decision.jpg", type: "historical" },
+        { date: "1979-12-24", title: "Sowjetischer Einmarsch in Afghanistan", text: "Die Sowjetunion marschierte in Afghanistan ein, um daskommunistischeRegime zu stützen. Der Einmarsch führte zu einem zehnjährigenKrieg undverschärfte den Kalten Krieg. Boykott derOlympischenSpiele 1980.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Bundesarchiv_Bild_183-1980-0112-005%2C_Afghanistan%2C_Sowjetische_Intervention.jpg/800px-Bundesarchiv_Bild_183-1980-0112-005%2C_Afghanistan%2C_Sowjetische_Intervention.jpg", type: "historical" },
+
+        { date: "1981-01-20", title: "USA: Ronald Reagan übernimmt", text: "Ronald Reagan wurde US-Präsident. Seine Politik war geprägt von einer konservativenWende,Aufrüstung und einer harten Linie gegen die Sowjetunion ('Reagan-Doktrin'). Er leitete das Ende des Kalten Krieges ein.", img: "https://upload.wikimedia.org/wikipedia/commons/b/b0/Ronald_Reagan_official_portrait_1981.jpg", type: "headOfState" },
+        { date: "1981-12-13", title: "Kriegsrecht in Polen", text: "In Polen wurde das Kriegsrecht verhängt, um dieSolidarność-Bewegung zu unterdrücken. EinVersuch deskommunistischenRegimes, den politischenUmbruch zu verhindern. Verschärfung der Ost-West-Spannungen.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Bundesarchiv_Bild_183-1982-0114-010%2C_Polen%2C_Kriegsrecht.jpg/800px-Bundesarchiv_Bild_183-1982-0114-010%2C_Polen%2C_Kriegsrecht.jpg", type: "historical" },
+        { date: "1981-12-14", title: "Polen: Wojciech Jaruzelski übernimmt", text: "Wojciech Jaruzelski stand an der Spitze Polens während des Kriegsrechts. Erversuchte, diekommunistischeHerrschaft durchRepression undReformen zu stabilisieren.", img: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Wojciech_Jaruzelski_1980s.jpg", type: "headOfState" },
+
+        { date: "1982-06-01", title: "Sanktionen der USA gegen die Sowjetunion", text: "Die USA verhängten Sanktionen gegen die Sowjetunion, um deren Politik inAfghanistan undPolen zu verurteilen. WirtschaftlicherDruck als Mittel imKalten Krieg.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/US_sanctions_against_the_Soviet_Union_1982.png/800px-US_sanctions_against_the_Soviet_Union_1982.png", type: "historical" },
+        { date: "1982-10-01", title: "BRD: Helmut Kohl übernimmt", text: "Helmut Kohl wurde Bundeskanzler der BRD. SeineRegierungszeit war geprägt von derdeutschenWiedervereinigung und der europäischenIntegration. Ergilt als 'Kanzler der Einheit'.", img: "https://upload.wikimedia.org/wikipedia/commons/8/84/Helmut_Kohl_1984-01-25_by_Klaus_D._Waltz.jpg", type: "headOfState" },
+
+        { date: "1983-11-01", title: "Abbruch aller Rüstungskontrollverhandlungen", text: "Die Rüstungskontrollverhandlungen zwischen den USA und der Sowjetunion wurden abgebrochen. ZunehmendeSpannungen undMisstrauen führten zu einer weiterenEskalation des Wettrüstens.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Cruise_missile_launch_test_flight_USAF.jpg/800px-Cruise_missile_launch_test_flight_USAF.jpg", type: "historical" },
+
+        { date: "1984-02-13", title: "Sowjetunion: Konstantin Tschernenko übernimmt", text: "Konstantin Tschernenko wurdeGeneralsekretär der KPdSU nachAndropows Tod. Seine kurze Amtszeit war eine Übergangsphase in der Sowjetunion.", img: "https://upload.wikimedia.org/wikipedia/commons/a/a4/Chernenko_Konstantin_U._1984_cropped.jpg", type: "headOfState" },
+        { date: "1985-03-11", title: "Sowjetunion: Michail Gorbatschow übernimmt", text: "Michail Gorbatschow wurdeGeneralsekretär der KPdSU. Seine Politik vonPerestroika (Umbau) undGlasnost (Offenheit) leitete das Ende des Kalten Krieges und denZerfall der Sowjetunion ein.", img: "https://upload.wikimedia.org/wikipedia/commons/b/b6/Mikhail_Gorbachev_in_1987.jpg", type: "headOfState" },
+
+        { date: "1985-11-01", title: "Gipfeltreffen in Genf", text: "Das Genfer Gipfeltreffen zwischen Reagan und Gorbatschow markierte denBeginn einer neuenPhase derEntspannung imOst-West-Konflikt. Persönliche Gespräche zwischen denSupermächten.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Reagan_and_gorbachev_geneva.jpg/800px-Reagan_and_gorbachev_geneva.jpg", type: "historical" },
+        { date: "1986-10-01", title: "Gipfeltreffen in Reykjavik", text: "Das Gipfeltreffen in Reykjavik zwischen Reagan und Gorbatschow brachtefast eine Einigung über weitreichendeAtomwaffenabrüstung. TrotzScheiterns wichtigerImpuls für spätereVerträge.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Reagan_and_Gorbachev_at_Reykjavik_summit_in_1986.JPEG/800px-Reagan_and_Gorbachev_at_Reykjavik_summit_in_1986.JPEG", type: "historical" },
+
+        { date: "1987-06-01", title: "Abkommen über den Abbau von Mittelstreckenraketen", text: "Ein Durchbruch in derRüstungskontrolle: Die USA und die Sowjetunion einigten sich auf denAbbau aller nuklearen Mittelstreckenraketen in Europa.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Pershing_II_launch.jpg/800px-Pershing_II_launch.jpg", type: "historical" },
+        { date: "1987-12-08", title: "Unterzeichnung des INF-Vertrages", text: "In Washington wurde der INF-Vertrag (Intermediate-Range Nuclear Forces Treaty) unterzeichnet. Erverbot alle landgestützten, nuklear bewaffnetenMittelstreckenraketen mit einer Reichweite von 500 bis 5500 Kilometern. WichtigesAbrüstungsabkommen.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/INF_Treaty_signing_ceremony.jpg/800px-INF_Treaty_signing_ceremony.jpg", type: "historical" },
+
+        { date: "1988-05-01", title: "Gipfeltreffen in Moskau", text: "Beim Moskauer Gipfeltreffen setzten Reagan und Gorbatschow ihren Dialog fort und bestätigten denINF-Vertrag. WeitereAnnäherung undVertrauensbildung.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Reagan_Gorbachev_Moscow_Summit_1988_2.jpg/800px-Reagan_Gorbachev_Moscow_Summit_1988_2.jpg", type: "historical" },
+        { date: "1988-08-01", title: "Rückzug aus Afghanistan", text: "Die Sowjetunion begann mit demAbzug ihrerTruppen aus Afghanistan. Das Ende des verlustreichen undinternational kritisierten Krieges zeichnete sich ab.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Soviet_soldiers_leaving_Afghanistan_in_1988.jpg/800px-Soviet_soldiers_leaving_Afghanistan_in_1988.jpg", type: "historical" },
+        { date: "1988-10-01", title: "Abbau von Raketen in Mitteleuropa", text: "Im Zuge des INF-Vertrages begann derAbbau vonMittelstreckenraketen inEuropa. Ein sichtbares Zeichen derEntspannungspolitik undAbrüstung.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Bundesarchiv_Bild_101I-583-2921-07%2C_Raketenabzug_in_Mutlangen.jpg/800px-Bundesarchiv_Bild_101I-583-2921-07%2C_Raketenabzug_in_Mutlangen.jpg", type: "historical" },
+
+        { date: "1989-01-20", title: "USA: George H. W. Bush übernimmt", text: "George H.W. Bush trat sein Amt als US-Präsident an. Seine Amtszeit war geprägt vom Ende des Kalten Krieges und dem Golfkrieg.", img: "https://upload.wikimedia.org/wikipedia/commons/b/bb/George_H._W._Bush_presidential_portrait.jpg", type: "headOfState" },
+        { date: "1989-11-06", title: "DDR: Egon Krenz übernimmt", text: "Egon Krenz wurde Staatsratsvorsitzender der DDR als Nachfolger von Erich Honecker. Seine Amtszeit war kurz und vom rapiden Zusammenbruch der DDR überschattet.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Bundesarchiv_Bild_183-1989-1108-031%2C_Berlin%2C_Egon_Krenz.jpg/800px-Bundesarchiv_Bild_183-1989-1108-031%2C_Berlin%2C_Egon_Krenz.jpg", type: "headOfState" },
+        { date: "1989-11-09", title: "Mauerfall", text: "Der Fall der Berliner Mauer. Ein historisches Ereignis, das das Ende der deutschen Teilung und des Kalten Krieges symbolisierte.  Der Weg zur deutschen Wiedervereinigung wurde frei.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Berlin_Wall_fall_1989.jpg/800px-Berlin_Wall_fall_1989.jpg", type: "historical" },
+
+        { date: "1990-09-12", title: "2+4-Vertrag", text: "Der Zwei-plus-Vier-Vertrag wurde unterzeichnet. Er regelte dieAußenpolitik derdeutschenWiedervereinigung und beendete die Rechte undVerantwortlichkeiten der Alliierten in Bezug auf Deutschland.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/2%2B4-Vertrag_Unterschrift.jpg/800px-2%2B4-Vertrag_Unterschrift.jpg", type: "historical" },
+
+        { date: "1991-12-25", title: "Auflösung der Sowjetunion", text: "Die Sowjetunion löste sich auf.  Michail Gorbatschow trat zurück, und dieSowjetunion zerfiel in 15 unabhängige Staaten. Das Ende des Kalten Krieges und der bipolaren Weltordnung.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Soviet_Union_breakup_map_en.png/800px-Soviet_Union_breakup_map_en.png", type: "historical" }
+    ];
+
+    // Sortiere Ereignisse nach Datum
+    eventsData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const timeline = document.getElementById("timeline");
+    const minDate = new Date(eventsData[0].date);
+    const maxDate = new Date(eventsData[eventsData.length - 1].date);
+    const totalRange = maxDate - minDate;
+
+    // Füge Jahr-Marker zur Timeline hinzu
+    function addYearMarkers() {
+        const startYear = 1968;
+        const endYear = 1991;
+
+        for (let year = startYear; year <= endYear; year++) {
+            const yearDate = new Date(year + "-01-01");
+            const fraction = (yearDate - minDate) / totalRange;
+
+            const yearMarker = document.createElement("div");
+            yearMarker.className = "year-marker-line";
+            yearMarker.style.left = (fraction * 100) + "%";
+
+            const yearLabel = document.createElement("div");
+            yearLabel.className = "year-marker-label";
+            yearLabel.textContent = year;
+            yearLabel.style.left = (fraction * 100) + "%";
+
+
+            if ((year - startYear) % 1 === 0) { // Jedes Jahr anzeigen
+                timeline.appendChild(yearMarker);
+                timeline.appendChild(yearLabel);
+            }
+        }
+    }
+
+    addYearMarkers(); // Jahresmarkierungen zuerst hinzufügen
+
+
+    // Erstelle Marker für jedes Ereignis
+    eventsData.forEach((ev, idx) => {
+        const eventDate = new Date(ev.date);
+        const fraction = (eventDate - minDate) / totalRange;
+        const marker = document.createElement("div");
+        marker.className = "event-marker";
+        marker.setAttribute("data-title", ev.title);
+        marker.setAttribute("data-index", idx);
+        marker.setAttribute("data-type", ev.type);
+        marker.style.left = (fraction * 100) + "%";
+        marker.addEventListener("click", () => { openEventModal(idx); });
+        timeline.appendChild(marker);
+    });
+
+    /******** Modal & Präsentationsmodus ********/
+    const eventModal = document.getElementById("eventModal");
+    const closeEventModalBtn = document.getElementById("closeEventModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalDate = document.getElementById("modalDate");
+    const modalImg = document.getElementById("modalImg");
+    const modalText = document.getElementById("modalText");
+
+    let currentIndex = 0;
+    let presentationActive = false;
+
+    const presentationNav = document.getElementById("presentationNav");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const endBtn = document.getElementById("endBtn");
+
+    function formatDate(dateStr) {
+        const d = new Date(dateStr);
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+        return `${day}.${month}.${year}`;
+    }
+
+    function openEventModal(idx) {
+        currentIndex = idx;
+        const ev = eventsData[idx];
+        modalTitle.textContent = ev.title;
+        modalDate.textContent = formatDate(ev.date);
+        modalImg.src = ev.img;
+        modalText.innerHTML = ev.text;
+        eventModal.classList.add("active");
+        presentationNav.style.display = presentationActive ? "flex" : "none";
+    }
+
+    closeEventModalBtn.addEventListener("click", () => {
+        eventModal.classList.remove("active");
+        presentationActive = false;
+        exitFullscreen();
+    });
+
+    prevBtn.addEventListener("click", () => {
+        if (currentIndex > 0) openEventModal(currentIndex - 1);
+    });
+    nextBtn.addEventListener("click", () => {
+        if (currentIndex < eventsData.length - 1) openEventModal(currentIndex + 1);
+    });
+    endBtn.addEventListener("click", () => {
+        eventModal.classList.remove("active");
+        presentationActive = false;
+        exitFullscreen();
+    });
+
+    // Präsentationsmodus im Vollbild
+    const presentationBtn = document.getElementById("presentationBtn");
+    presentationBtn.addEventListener("click", () => {
+        document.body.classList.add('presentation-active');
+        requestFullscreen();
+        presentationActive = true;
+        presentationNav.style.display = "flex";
+        openEventModal(0);
+    });
+
+    function requestFullscreen() {
+        const docEl = document.documentElement;
+        if (docEl.requestFullscreen) {
+            docEl.requestFullscreen();
+        } else if (docEl.mozRequestFullScreen) {
+            docEl.mozRequestFullScreen();
+        } else if (docEl.webkitRequestFullscreen) {
+            docEl.webkitRequestFullscreen();
+        } else if (docEl.msRequestFullscreen) {
+            docEl.msRequestFullscreen();
+        }
+    }
+    function exitFullscreen() {
+        document.body.classList.remove('presentation-active');
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+
+    /******** Zoom-Funktionen ********/
+    let scale = 1;
+    const zoomInBtn = document.getElementById("zoomIn");
+    const zoomOutBtn = document.getElementById("zoomOut");
+    zoomInBtn.addEventListener("click", () => { scale += 0.1; updateScale(); });
+    zoomOutBtn.addEventListener("click", () => { scale = Math.max(0.5, scale - 0.1); updateScale(); });
+    function updateScale() {
+        timeline.style.transform = `scale(${scale})`;
+        // Skalierungsfaktor als CSS-Variable für Jahr-Labels
+        timeline.parentElement.style.setProperty('--scale-factor', scale);
+    }
+
+
+    // Erweiterte Modal-Funktion mit Animation
+    function openEventModal(idx, showAnimation = true) {
+        if (presentationActive && showAnimation) {
+            const ev = eventsData[idx];
+            const year = new Date(ev.date).getFullYear();
+            showYearAnimation(year).then(() => {
+                showEventDetails(idx);
+            });
+        } else {
+            showEventDetails(idx);
+        }
+    }
+
+    function showYearAnimation(year) {
+        return new Promise(resolve => {
+            const animDiv = document.createElement("div");
+            animDiv.className = "year-animation";
+            animDiv.textContent = year;
+            document.body.appendChild(animDiv);
+
+            setTimeout(() => {
+                animDiv.remove();
+                resolve();
+            }, 2000);
+        });
+    }
+
+    function showEventDetails(idx) {
+        currentIndex = idx;
+        const ev = eventsData[idx];
+        modalTitle.textContent = ev.title;
+        modalDate.textContent = formatDate(ev.date);
+        modalImg.src = ev.img;
+        modalText.innerHTML = ev.text;
+
+        if (presentationActive) {
+            document.querySelector('.modal-content').classList.add('presentation');
+        }
+
+        eventModal.classList.add("active");
+    }
+
+    prevBtn.addEventListener("click", () => {
+        if (currentIndex > 0) openEventModal(currentIndex - 1);
+    });
+    nextBtn.addEventListener("click", () => {
+        if (currentIndex < eventsData.length - 1) openEventModal(currentIndex + 1);
+    });
+
+    function requestFullscreen() {
+        const container = document.documentElement;
+        if (container.requestFullscreen) {
+            container.requestFullscreen();
+        }
+        container.style.backgroundColor = "#0a0a0a";
+    }
+
+    /* Drag-Scroll Funktion */
+    let isDragging = false;
+    let startX;
+    let scrollLeft;
+
+    const timelineContainer = document.getElementById('timelineContainer');
+
+    timelineContainer.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        timelineContainer.classList.add('grabbing');
+        startX = e.pageX - timelineContainer.offsetLeft;
+        scrollLeft = timelineContainer.scrollLeft;
+    });
+
+    timelineContainer.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - timelineContainer.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        timelineContainer.scrollLeft = scrollLeft - walk;
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        timelineContainer.classList.remove('grabbing');
+    });
+
+    timelineContainer.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        startX = e.touches[0].pageX - timelineContainer.offsetLeft;
+        scrollLeft = timelineContainer.scrollLeft;
+    });
+
+    timelineContainer.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const x = e.touches[0].pageX - timelineContainer.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        timelineContainer.scrollLeft = scrollLeft - walk;
+    });
+
+    document.addEventListener('touchend', () => {
+        isDragging = false;
+    });
+
+
+</script>
 </body>
 </html>
