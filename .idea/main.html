@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Zeitstrahl: Ereignisse &amp; Staatsführer 1968–1991</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Quantico&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            /* Animierter Hintergrund: Rot gegen Blau im Wettkampf */
-            background: linear-gradient(45deg, #ff0000, #0000ff);
+            background: linear-gradient(90deg, #0000ff, #ff0000);
             background-size: 400% 400%;
             animation: bgBattle 30s ease infinite;
             color: #f0f0f0;
-            font-family: 'Quantico', sans-serif;
+            font-family: 'Roboto', sans-serif;
             overflow-x: hidden;
         }
         header {
@@ -21,11 +21,12 @@
             text-align: center;
             position: relative;
             z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         header h1 {
             font-family: 'Orbitron', sans-serif;
             letter-spacing: 1px;
-            font-size: 2rem;
+            font-size: 2.2rem;
             color: #00ffc3;
         }
         #presentationBtn {
@@ -44,6 +45,7 @@
             font-size: 1rem;
             transition: all 0.3s ease;
             z-index: 20;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         #presentationBtn:hover {
             transform: scale(1.05);
@@ -71,7 +73,7 @@
         .modal-content {
             background: #161616;
             border: 2px solid #00ffc3;
-            border-radius: 6px;
+            border-radius: 8px;
             width: 90%;
             max-width: 800px;
             max-height: 90%;
@@ -110,9 +112,9 @@
             border: 1px solid #444;
             object-fit: cover;
         }
-        /* Bildgrößen anpassen */
+
         .img-historical { width: 600px; height: 400px; }
-        .img-headOfState { width: 400px; height: 600px; }
+        .img-headOfState { width: 400px; height: 550px; }
         .close-modal {
             position: absolute;
             top: 10px;
@@ -183,11 +185,13 @@
             border-radius: 50%;
             cursor: pointer;
             animation: pulse 3s infinite;
+            box-shadow: 0 0 8px rgba(0,255,195,0.7);
         }
         .event-marker[data-type="headOfState"] {
             background: #ff9800;
             width: 20px;
             height: 20px;
+            box-shadow: 0 0 10px rgba(255,152,0,0.7);
         }
         .event-marker:hover::after {
             content: attr(data-title);
@@ -223,9 +227,9 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.2s;
         }
-        .zoom-btn:hover { background: #222; }
+        .zoom-btn:hover { background: #222; transform: scale(1.1); }
         .year-marker-line {
             position: absolute;
             top: -10px;
@@ -277,16 +281,9 @@
             color: #00ffc3;
             text-shadow: 0 0 20px rgba(0,255,195,0.5);
             opacity: 0;
-            animation: fadeInOut 2s ease-in-out;
             z-index: 2000;
             pointer-events: none;
         }
-        .grabbing {
-            cursor: grabbing !important;
-            user-select: none;
-        }
-
-        /* Keyframes für Animationen */
         @keyframes bgBattle {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -310,6 +307,10 @@
             20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(0deg); filter: blur(0); }
             80% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); filter: drop-shadow(0 0 20px #00ffc3); }
             100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(5deg); filter: blur(5px); }
+        }
+        .grabbing {
+            cursor: grabbing !important;
+            user-select: none;
         }
     </style>
 </head>
@@ -339,6 +340,7 @@
         <button class="presentation-btn" id="endBtn">×</button>
     </div>
 </div>
+<div class="year-animation" id="yearAnimation"></div>
 <script>
     const eventsData = [
         {
@@ -485,7 +487,7 @@
             date: "1982-06-01",
             title: "Sanktionen der USA gegen die Sowjetunion",
             text: "Die USA setzten wirtschaftliche Sanktionen gegen die Sowjetunion ein, um deren militärische und politische Interventionen in Afghanistan und Polen zu kritisieren. Diese Maßnahmen sollten den sowjetischen Einfluss eindämmen. Wirtschaftlicher Druck wurde dabei als strategisches Mittel im Kalten Krieg angewandt.",
-            img: "https://images.cgames.de/images/gamestar/4/die-sowjetunion-hatte-es-die-usa-wollte-es-mit-diesem-trick-sind-die-usa-an-das-entscheidende-element-f%C3%BCr-ihr-futuristisches-flugzeug-gekommen-banner-neu_6240097.jpg",
+            img: "https://i.pinimg.com/564x/59/ee/18/59ee18e6b41f5bbcaee410992e5ea9ba.jpg",
             type: "historical"
         },
         {
@@ -611,9 +613,10 @@
 
     eventsData.sort((a, b) => new Date(a.date) - new Date(b.date));
     const timeline = document.getElementById("timeline");
-    const minDate = new Date(eventsData[0].date);
-    const maxDate = new Date(eventsData[eventsData.length - 1].date);
+    const minDate = new Date(eventsData[0]?.date || "1968-01-01");
+    const maxDate = new Date(eventsData[eventsData.length - 1]?.date || "1991-12-31");
     const totalRange = maxDate - minDate;
+
     function addYearMarkers() {
         const startYear = 1968;
         const endYear = 1991;
@@ -656,6 +659,7 @@
     const prevBtn = document.getElementById("prevBtn");
     const nextBtn = document.getElementById("nextBtn");
     const endBtn = document.getElementById("endBtn");
+
     function formatDate(dateStr) {
         const d = new Date(dateStr);
         const day = String(d.getDate()).padStart(2, "0");
@@ -663,17 +667,30 @@
         const year = d.getFullYear();
         return `${day}.${month}.${year}`;
     }
+    function triggerYearAnimation(dateStr) {
+        const yearAnim = document.getElementById('yearAnimation');
+        const d = new Date(dateStr);
+        const year = d.getFullYear();
+        const formattedDate = formatDate(dateStr);
+        yearAnim.textContent = `${formattedDate}`;
+        yearAnim.style.animation = 'none';
+        void yearAnim.offsetWidth;
+        yearAnim.style.animation = 'fadeInOut 2s ease-in-out';
+    }
     function openEventModal(idx) {
         currentIndex = idx;
         const ev = eventsData[idx];
-        modalTitle.textContent = ev.title;
-        modalDate.textContent = formatDate(ev.date);
-        modalImg.src = ev.img;
-        modalText.innerHTML = ev.text;
-        modalImg.classList.remove("img-historical", "img-headOfState");
-        if(ev.type === "historical") { modalImg.classList.add("img-historical"); }
-        else if(ev.type === "headOfState") { modalImg.classList.add("img-headOfState"); }
-        eventModal.classList.add("active");
+        triggerYearAnimation(ev.date);
+        setTimeout(() => {
+            modalTitle.textContent = ev.title;
+            modalDate.textContent = formatDate(ev.date);
+            modalImg.src = ev.img;
+            modalText.innerHTML = ev.text;
+            modalImg.classList.remove("img-historical", "img-headOfState");
+            if(ev.type === "historical") { modalImg.classList.add("img-historical"); }
+            else if(ev.type === "headOfState") { modalImg.classList.add("img-headOfState"); }
+            eventModal.classList.add("active");
+        }, 800);
     }
     prevBtn.addEventListener("click", () => { if (currentIndex > 0) openEventModal(currentIndex - 1); });
     nextBtn.addEventListener("click", () => { if (currentIndex < eventsData.length - 1) openEventModal(currentIndex + 1); });
