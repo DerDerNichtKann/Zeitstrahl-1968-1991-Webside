@@ -7,28 +7,88 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: linear-gradient(90deg, #0000ff, #ff0000);
-            background-size: 400% 400%;
-            animation: bgBattle 30s ease infinite;
+            background:
+                    radial-gradient(circle at top left, rgba(0, 128, 255, 0.3), transparent 70%),
+                    radial-gradient(circle at bottom right, rgba(255, 64, 64, 0.3), transparent 70%),
+                    repeating-linear-gradient(45deg, #0a0a0a, #0a0a0a 5px, #222 5px, #222 10px),
+                    linear-gradient(90deg, #0000ff, #ff0000);
+            background-blend-mode: overlay;
+            background-size: 200% 200%;
+            animation: gradientShiftBody 30s ease infinite;
             color: #f0f0f0;
             font-family: 'Roboto', sans-serif;
             overflow-x: hidden;
         }
+
+        @keyframes gradientShiftBody {
+            0%   { background-position: 20% 50%; }
+            25%  { background-position: 40% 50%; }
+            50%  { background-position: 60% 50%; }
+            75%  { background-position: 40% 50%; }
+            100% { background-position: 20% 50%; }
+        }
+
         header {
-            background: #0a0a0a;
-            border-bottom: 2px solid #222;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background:
+                    radial-gradient(circle at top left, rgba(0, 128, 255, 0.3), transparent 70%),
+                    radial-gradient(circle at bottom right, rgba(255, 64, 64, 0.3), transparent 70%),
+                    repeating-linear-gradient(45deg, #0a0a0a, #0a0a0a 5px, #222 5px, #222 10px),
+                    linear-gradient(90deg, #0000ff, #ff0000);
+            background-blend-mode: overlay;
+            background-size: 200% 200%;
+            animation: gradientShift 30s ease infinite;
             padding: 10px 20px;
             text-align: center;
-            position: relative;
-            z-index: 10;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes gradientShift {
+            0%   { background-position: 20% 50%; }
+            25%  { background-position: 40% 50%; }
+            50%  { background-position: 60% 50%; }
+            75%  { background-position: 40% 50%; }
+            100% { background-position: 20% 50%; }
         }
         header h1 {
             font-family: 'Orbitron', sans-serif;
             letter-spacing: 1px;
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             color: #00ffc3;
+            text-shadow: 0 0 5px #00ffc3, 0 0 10px #00ffc3;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border: 1px solid #00ffc3;
+            border-radius: 4px;
+            margin: 0 20px;
+            display: inline-block;
         }
+
+        header .flag {
+            height: 40px;
+            width: auto;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        header .usa {
+            left: 20px;
+        }
+
+        header .soviet {
+            right: 20px;
+        }
+
         #presentationBtn {
             position: fixed;
             bottom: 20px;
@@ -316,7 +376,13 @@
 </head>
 <body>
 <header>
+    <a href="https://cdn.britannica.com/33/4833-050-F6E415FE/Flag-United-States-of-America.jpg" target="_blank">
+        <img src="https://cdn.britannica.com/33/4833-050-F6E415FE/Flag-United-States-of-America.jpg" alt="USA Flagge" class="flag usa">
+    </a>
     <h1>Historische Ereignisse &amp; Staatsführer 1968–1991</h1>
+    <a href="https://www.sticker-store24.com/media/8f/c6/08/1604436024/42-07-002_sowjetunion-png.png" target="_blank">
+        <img src="https://www.sticker-store24.com/media/8f/c6/08/1604436024/42-07-002_sowjetunion-png.png" alt="Sowjetunion Flagge" class="flag soviet">
+    </a>
     <button id="presentationBtn">Präsentation</button>
 </header>
 <div class="timeline-container" id="timelineContainer">
